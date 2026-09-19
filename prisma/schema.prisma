@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String          @id @default(uuid())
+  name     String          @default("Student")
+  attempts Attempt[]
+  progress TopicProgress[]
+}
+
+model Module {
+  id     String  @id @default(uuid())
+  number Int // 1 to 5 for VTU
+  name   String
+  topics Topic[]
+}
+
+model Topic {
+  id        String          @id @default(uuid())
+  moduleId  String
+  name      String
+  module    Module          @relation(fields: [moduleId], references: [id])
+  questions Question[]
+  progress  TopicProgress[]
+}
+
+model Question {
+  id                 String    @id @default(uuid())
+  topicId            String
+  text               String
+  options            String[]
+  correctOptionIndex Int
+  explanation        String
+  difficultyLevel    Int       @default(2)
+  createdAt          DateTime  @default(now())
+  topic              Topic     @relation(fields: [topicId], references: [id])
+  attempts           Attempt[]
+}
+
+// One row per answered question (correct or not).
+model Attempt {
+  id            String   @id @default(uuid())
+  userId        String
+  questionId    String
+  selectedIndex Int
+  studentAnswer String
+  isCorrect     Boolean
+  misconception String?
+  timestamp     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+  question      Question @relation(fields: [questionId], references: [id])
+}
+
+model TopicProgress {
+  id            String   @id @default(uuid())
+  userId        String
+  topicId       String
+  attempts      Int      @default(0)
+  correct       Int      @default(0)
+  mistakes      Int      @default(0)
+  lastAttempted DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+  topic         Topic    @relation(fields: [topicId], references: [id])
+
+  @@unique([userId, topicId])
+}
