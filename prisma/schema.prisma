@@ -38,6 +38,7 @@ model Question {
   correctOptionIndex Int
   explanation        String
   difficultyLevel    Int       @default(2)
+  questionType       String    @default("conceptual")
   createdAt          DateTime  @default(now())
   topic              Topic     @relation(fields: [topicId], references: [id])
   attempts           Attempt[]
@@ -52,6 +53,7 @@ model Attempt {
   studentAnswer String
   isCorrect     Boolean
   misconception String?
+  timeTakenMs   Int?
   timestamp     DateTime @default(now())
   user          User     @relation(fields: [userId], references: [id])
   question      Question @relation(fields: [questionId], references: [id])

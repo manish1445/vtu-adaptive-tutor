@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const { userId, questionId, selectedIndex } = await request.json();
+    const { userId, questionId, selectedIndex, timeTakenMs } = await request.json();
 
     if (
       typeof userId !== "string" ||
@@ -14,6 +14,13 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { success: false, error: "Invalid request body" },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(userId)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid user id" },
         { status: 400 }
       );
     }
@@ -32,12 +39,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // Optional timing, clamped to 0 to 1 hour.
+    const timeTaken = Number.isFinite(timeTakenMs)
+      ? Math.min(Math.max(Math.round(timeTakenMs), 0), 3_600_000)
+      : null;
+
     // The server decides correctness, never the client.
     const isCorrect = selectedIndex === question.correctOptionIndex;
     const studentAnswer = question.options[selectedIndex];
     const correctAnswer = question.options[question.correctOptionIndex];
 
-    let aiFeedback = "Correct! Great job.";
+    let aiFeedback = "Great job!";
     let misconception: string | null = null;
 
     if (!isCorrect) {
@@ -73,6 +85,7 @@ export async function POST(request: Request) {
           studentAnswer,
           isCorrect,
           misconception,
+          timeTakenMs: timeTaken,
         },
       }),
       prisma.topicProgress.upsert({
