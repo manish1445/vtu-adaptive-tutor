@@ -1,0 +1,1 @@
+ALTER TABLE "SourceChunk" ALTER COLUMN "embedding" TYPE vector(3072);

@@ -15,19 +15,21 @@ model User {
 }
 
 model Module {
-  id     String  @id @default(uuid())
-  number Int // 1 to 5 for VTU
-  name   String
-  topics Topic[]
+  id           String        @id @default(uuid())
+  number       Int // 1 to 5 for VTU
+  name         String
+  topics       Topic[]
+  sourceChunks SourceChunk[]
 }
 
 model Topic {
-  id        String          @id @default(uuid())
-  moduleId  String
-  name      String
-  module    Module          @relation(fields: [moduleId], references: [id])
-  questions Question[]
-  progress  TopicProgress[]
+  id           String          @id @default(uuid())
+  moduleId     String
+  name         String
+  module       Module          @relation(fields: [moduleId], references: [id])
+  questions    Question[]
+  progress     TopicProgress[]
+  sourceChunks SourceChunk[]
 }
 
 model Question {
@@ -71,4 +73,20 @@ model TopicProgress {
   topic         Topic    @relation(fields: [topicId], references: [id])
 
   @@unique([userId, topicId])
+}
+
+model SourceChunk {
+  id         String                      @id @default(cuid())
+  moduleId   String
+  topicId    String?
+  sourceType String
+  content    String
+  metadata   Json?
+  embedding  Unsupported("vector(3072)")
+  createdAt  DateTime                    @default(now())
+
+  module Module @relation(fields: [moduleId], references: [id])
+  topic  Topic? @relation(fields: [topicId], references: [id])
+
+  @@index([moduleId, topicId])
 }
